@@ -49,6 +49,7 @@ func install_script_hook_files() -> void:
 	ModLoaderMod.install_script_hooks("res://objects/battle/battle_resources/cog_attacks/carbon_copy.gd", extensions_dir_path.path_join("objects/battle/battle_resources/cog_attacks/carbon_copy.hooks.gd"))
 
 
+
 func add_translations() -> void:
 	# ! Place all of your translation files into this directory
 	translations_dir_path = mod_dir_path.path_join("translations")
@@ -67,3 +68,18 @@ func _ready() -> void:
 	# ! This uses Godot's native `tr` func, which translates a string. You'll
 	# ! find this particular string in the example CSV here: translations/modname.csv
 	# ModLoaderLog.info("Translation Demo: " + tr("MODNAME_READY_TEXT"), LOG_NAME)
+
+func _process(delta: float) -> void:
+	if BattleManager and BattleService:
+		BattleService.s_action_finished.connect(on_action_finished) 
+		
+func on_action_finished(action: BattleAction):
+	if action is CarbonCopy:
+		var original_health = action.user.stats.hp
+		# get the index of the cog using the action we will find the cog using +1 from that index
+		var cog_index = action.manager.cogs.find(action.user)
+		if cog_index != -1 and cog_index + 1 < action.manager.cogs.size():
+			var copied_cog = action.manager.cogs[cog_index + 1]
+			copied_cog.stats.hp = original_health
+		else:
+			ModLoaderLog.warning("Could not find copied cog", LOG_NAME)
